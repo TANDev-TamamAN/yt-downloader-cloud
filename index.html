@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unduh Video YouTube Aman</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #ff0000;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            padding: 14px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>YT Downloader Bebas Iklan 🚀</h1>
+    <p>Masukkan link video YouTube di bawah ini untuk mengunduh dalam format MP4 secara aman.</p>
+    
+    <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=...">
+    <button onclick="downloadVideo()">Unduh Sekarang</button>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+    function downloadVideo() {
+        const urlInput = document.getElementById('urlInput').value;
+        const statusDiv = document.getElementById('status');
+        
+        if (!urlInput) {
+            statusDiv.style.color = 'red';
+            statusDiv.innerText = 'Silakan masukkan link YouTube terlebih dahulu!';
+            return;
+        }
+        
+        statusDiv.style.color = 'blue';
+        statusDiv.innerText = 'Sedang memproses video... Mohon tunggu (bisa memakan waktu beberapa menit).';
+        
+        // Mengarahkan browser ke endpoint server backend lokal untuk download langsung
+        window.location.href = `/download?url=${encodeURIComponent(urlInput)}`;
+        
+        // Reset status setelah beberapa detik karena window.location memicu unduhan file
+        setTimeout(() => {
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = 'Unduhan dimulai!';
+        }, 5000);
+    }
+</script>
+
+</body>
+</html>
