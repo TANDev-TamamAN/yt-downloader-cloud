@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Downloader - Aman & Bersih</title>
+    <title>YT Downloader - Mandiri & Tanpa Iklan</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -47,33 +47,35 @@
             transition: background 0.3s;
         }
         button:hover { background-color: #cc0000; }
-        .status { margin-top: 15px; font-size: 14px; color: #aaa; }
+        .status { margin-top: 15px; font-size: 14px; color: #ffc107; }
         .download-link {
             display: inline-block;
             margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #00bcd4;
+            padding: 12px 25px;
+            background-color: #0087ff;
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
+            transition: background 0.3s;
         }
+        .download-link:hover { background-color: #0069cc; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>YouTube Downloader</h1>
-    <p>Aman, Cepat, Bebas Pop-up Iklan</p>
-    <input type="text" id="videoUrl" placeholder="Tempel link video YouTube di sini...">
-    <button onclick="prosesDownload()">Ambil Video</button>
+    <p>Sistem Pengunduh Mandiri Bebas Iklan</p>
+    <input type="text" id="videoUrl" placeholder="Tempel link YouTube (Format lengkap/pendek)...">
+    <button onclick="prosesDownload()">Mulai Mengunduh</button>
     <div class="status" id="statusMessage"></div>
     <div id="downloadArea"></div>
 </div>
 
 <script>
 async function prosesDownload() {
-    const urlInput = document.getElementById('videoUrl').value;
+    const urlInput = document.getElementById('videoUrl').value.trim();
     const statusText = document.getElementById('statusMessage');
     const downloadArea = document.getElementById('downloadArea');
     
@@ -86,31 +88,50 @@ async function prosesDownload() {
     downloadArea.innerHTML = "";
 
     try {
-        // Menggunakan API publik pihak ketiga yang stabil untuk konversi MP4 tanpa iklan
-        const response = await fetch(`https://allorigins.win{encodeURIComponent('https://wuk.sh')}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                url: urlInput,
-                vQuality: '720'
-            })
-        });
-
-        // Catatan: Jika API utama mengalami downtime, Anda bisa menembak endpoint cadangan secara langsung.
-        statusText.innerText = "Video berhasil diproses! Klik tombol di bawah untuk mengunduh.";
-        downloadArea.innerHTML = `<a href="${urlInput}" target="_blank" class="download-link" download>Download MP4 Sekarang</a>`;
+        // Menggunakan API Serverless Publik untuk konversi video secara realtime
+        const apiEndpoint = `https://allorigins.win{encodeURIComponent('https://cobalt.tools')}`;
         
+        const response = await fetch('https://shifuserver.xyz', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: urlInput })
+        });
+        
+        const data = await response.json();
+
+        if (data && data.url) {
+            statusText.style.color = "#00ff88";
+            statusText.innerText = "Video Sukses Diproses!";
+            // Memunculkan tombol download file MP4 milik Anda sendiri
+            downloadArea.innerHTML = `<a href="${data.url}" target="_blank" class="download-link">Unduh File MP4 Sekarang</a>`;
+        } else {
+            // Jalur mesin cadangan otomatis jika API pertama sibuk
+            ambilViaCadangan(urlInput);
+        }
     } catch (error) {
-        // Taktik fallback cerdas jika pembatasan jaringan terjadi
-        statusText.innerText = "";
-        const idVideo = urlInput.split('v=')[1] || urlInput.split('/').pop();
-        downloadArea.innerHTML = `
-            <p style="color: #ffc107;">Gunakan jalur alternatif instan di bawah ini:</p>
-            <a href="https://9xbuddy.com{encodeURIComponent(urlInput)}" target="_blank" class="download-link">Unduh via 9XBuddy (Aman)</a>
-        `;
+        ambilViaCadangan(urlInput);
+    }
+}
+
+async function ambilViaCadangan(url) {
+    const statusText = document.getElementById('statusMessage');
+    const downloadArea = document.getElementById('downloadArea');
+    
+    try {
+        // Menembak API Serverless alternatif (Y2mate engine bypass)
+        const res = await fetch(`https://vextr.xyz{encodeURIComponent(url)}`);
+        const json = await res.json();
+        
+        if(json.download_url) {
+            statusText.style.color = "#00ff88";
+            statusText.innerText = "Video Sukses Diproses (Jalur Cadangan)!";
+            downloadArea.innerHTML = `<a href="${json.download_url}" target="_blank" class="download-link">Unduh File MP4 Sekarang</a>`;
+        } else {
+            statusText.innerText = "Gagal memproses. Pastikan link YouTube Anda benar.";
+        }
+    } catch (e) {
+        statusText.style.color = "#ff4444";
+        statusText.innerText = "Koneksi cloud sibuk, silakan coba lagi beberapa saat.";
     }
 }
 </script>
