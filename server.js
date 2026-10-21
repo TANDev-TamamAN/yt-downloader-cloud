@@ -1,46 +1,92 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Menyajikan file HTML statis dari folder yang sama
-app.use(express.static(__dirname));
+// Menentukan lokasi penyimpanan file biner yt-dlp di dalam proyek
+const YTDLP_DIR = path.join(__dirname, 'bin');
+const YTDLP_PATH = path.join(YTDLP_DIR, 'yt-dlp');
 
-app.get('/download', (req, res) => {
-    const videoUrl = req.query.url;
-    
-    if (!videoUrl) {
-        return res.status(400).send('Link URL YouTube tidak ditemukan.');
+// Fungsi otomatis untuk mengunduh yt-dlp saat server cloud dinyalakan
+function downloadYtdlp() {
+    if (!fs.existsSync(YTDLP_DIR)) {
+        fs.mkdirSync(YTDLP_DIR);
     }
 
-    console.log(`Memproses unduhan untuk: ${videoUrl}`);
+    if (fs.existsSync(YTDLP_PATH)) {
+        console.log('yt-dlp sudah tersedia.');
+        fs.chmodSync(YTDLP_PATH, '755'); // Beri izin eksekusi di Linux Cloud
+        return;
+    }
 
-    // Mengatur header agar browser mengenali ini sebagai file unduhan video
-    res.header('Content-Disposition', 'attachment; filename="video.mp4"');
-    res.header('Content-Type', 'video/mp4');
+    console.log('Mengunduh yt-dlp untuk server cloud...');
+    // Mengunduh versi Linux standalone karena server Render menggunakan Linux
+    const url = 'https://github.com';
+    const file = fs.createWriteStream(YTDLP_PATH);
 
-    // Menjalankan perintah yt-dlp secara langsung dan mengalirkan (stream) outputnya ke user
-    // Pastikan yt-dlp sudah terinstal di komputer atau server Anda!
-    const ytdlp = spawn('yt-dlp', [
-        '-o', '-',                 // Output dialirkan ke stdout
-        '-f', 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b', // Kombinasi format video + audio terbaik berformat MP4
+    https.get(url, (response) => {
+        // Menangani pengalihan URL (redirect) jika ada
+        if (response.statusCode === 302 || response.statusCode === 301) {
+            https.get(response.headers.location, (res) => res.pipe(file));
+        } else {
+            response.pipe(file);
+        }
+
+        file.on('finish', () => {
+            file.close();
+            fs.chmodSync(YTDLP_PATH, '755'); // Beri izin eksekusi
+            console.log('Unduhan yt-dlp selesai dan siap digunakan!');
+        });
+    }).on('error', (err) => {
+        fs.unlink(YTDLP_PATH, () => {});
+        console.error('Gagal mengunduh yt-dlp:', err.message);
+    });
+}
+
+// Jalankan fungsi unduh otomatis saat server start
+downloadYtdlp();
+
+app.use(express.static(__dirname));
+app.use(express.json());
+
+app.post('/download', (req, res) => {
+    const videoUrl = req.body.url;
+    if (!videoUrl) {
+        return res.status(400).send('URL YouTube wajib diisi!');
+    }
+
+    // Mengatur header agar browser langsung mendownload file sebagai video MP4
+    res.setHeader('Content-Disposition', 'attachment; filename="video.mp4"');
+    res.setHeader('Content-Type', 'video/mp4');
+
+    // Menjalankan yt-dlp langsung ke output stream Express tanpa simpan di harddisk cloud
+    const ytdlp = spawn(YTDLP_PATH, [
+        '-f', 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv+ba / b', // Pilih format MP4 terbaik yang sudah digabung audio
+        '-o', '-', // Output langsung ke stdout (stream)
         videoUrl
     ]);
 
-    // Mengalirkan data biner video langsung ke browser pengguna
     ytdlp.stdout.pipe(res);
 
-    // Menangani log error dari yt-dlp jika ada masalah
     ytdlp.stderr.on('data', (data) => {
-        console.error(`yt-dlp error: ${data.toString()}`);
+        console.log(`Log yt-dlp: ${data}`);
     });
 
     ytdlp.on('close', (code) => {
-        console.log(`Proses yt-dlp selesai dengan kode: ${code}`);
+        if (code !== 0) {
+            console.error(`Proses yt-dlp berhenti dengan kode error: ${code}`);
+        }
     });
 });
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`Server berjalan lancar di http://localhost:${PORT}`);
+    console.log(`Server bebas iklan berjalan lancar di port ${PORT}`);
 });
